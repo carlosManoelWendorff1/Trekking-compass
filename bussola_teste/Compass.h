@@ -30,39 +30,17 @@ public:
   {
     sensors_event_t event;
     mag_.getEvent(&event);
-    float headingDegrees = calculate_heading_degrees(event);
+    float headingDegrees = calculate_heading_degrees_from_event(event);
     Serial.print("Posicao em graus: ");
     Serial.print(headingDegrees);
     Serial.print(" ---->  ");
     Serial.println(cardinal_point_calculation(headingDegrees));
     delay(100);
   }
-
-private:
-  void displaySensorDetails()
+  float calculate_heading_degrees()
   {
-    sensor_t sensor;
-    mag_.getSensor(&sensor);
-    Serial.println("------------------------------------");
-    Serial.print("Sensor: ");
-    Serial.println(sensor.name);
-    Serial.print("Versao do driver: ");
-    Serial.println(sensor.version);
-    Serial.print("ID do sensor: ");
-    Serial.println(sensor.sensor_id);
-    Serial.print("Valor maximo: ");
-    Serial.print(sensor.max_value);
-    Serial.print("Valor Minimo: ");
-    Serial.print(sensor.min_value);
-    Serial.print("Resolucao: ");
-    Serial.print(sensor.resolution);
-    Serial.println("------------------------------------");
-    Serial.println("");
-    delay(500);
-  }
-
-  float calculate_heading_degrees(sensors_event_t event)
-  {
+    sensors_event_t event;
+    mag_.getEvent(&event);
     float heading = atan2(event.magnetic.y, event.magnetic.x);
     float declinationAngle = 0.22; // Ângulo de declinação magnética para São Paulo
     heading += declinationAngle;
@@ -82,11 +60,10 @@ private:
   String cardinal_point_calculation(float headingDegrees)
   {
     // array de posições cardeais
-    
+
     String cardinalPoints[] = {"N", "NE", "E", "SE", "S", "SW", "W", "NW"};
 
-
-    //verifica a posição em graus do ponto cardeal
+    // verifica a posição em graus do ponto cardeal
 
     if (headingDegrees >= 0 && headingDegrees < 22.5)
     {
@@ -126,5 +103,44 @@ private:
     }
   }
 
+private:
+  void displaySensorDetails()
+  {
+    sensor_t sensor;
+    mag_.getSensor(&sensor);
+    Serial.println("------------------------------------");
+    Serial.print("Sensor: ");
+    Serial.println(sensor.name);
+    Serial.print("Versao do driver: ");
+    Serial.println(sensor.version);
+    Serial.print("ID do sensor: ");
+    Serial.println(sensor.sensor_id);
+    Serial.print("Valor maximo: ");
+    Serial.print(sensor.max_value);
+    Serial.print("Valor Minimo: ");
+    Serial.print(sensor.min_value);
+    Serial.print("Resolucao: ");
+    Serial.print(sensor.resolution);
+    Serial.println("------------------------------------");
+    Serial.println("");
+    delay(500);
+  }
+  float calculate_heading_degrees_from_event(sensors_event_t event)
+  {
+    float heading = atan2(event.magnetic.y, event.magnetic.x);
+    float declinationAngle = 0.22; // Ângulo de declinação magnética para São Paulo
+    heading += declinationAngle;
+
+    // Converte radianos para graus
+    float headingDegrees = heading * 180 / PI;
+
+    // Ajuste para que o grau esteja entre 0 e 360
+    if (headingDegrees < 0)
+    {
+      headingDegrees += 360;
+    }
+
+    return headingDegrees;
+  }
   Adafruit_HMC5883_Unified mag_;
 };
